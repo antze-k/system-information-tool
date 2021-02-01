@@ -1,5 +1,5 @@
 [package]
-name = "si"
+name = "system-information-tool"
 version = "0.1.0"
 authors = ["Antze K <antze@singu-lair.com>"]
 edition = "2018"
@@ -8,6 +8,7 @@ edition = "2018"
 
 [[bin]]
 name = "si"
+path = "src/main.rs"
 
 [dependencies]
 byte-unit = "4"
