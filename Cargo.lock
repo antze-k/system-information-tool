@@ -108,16 +108,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "si"
-version = "0.1.0"
-dependencies = [
- "byte-unit",
- "serde",
- "winreg",
- "wmi",
-]
-
-[[package]]
 name = "syn"
 version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -126,6 +116,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "system-information-tool"
+version = "0.1.0"
+dependencies = [
+ "byte-unit",
+ "serde",
+ "winreg",
+ "wmi",
 ]
 
 [[package]]
