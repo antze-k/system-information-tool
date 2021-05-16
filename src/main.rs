@@ -29,7 +29,7 @@ struct GPU {
     caption: String,
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Deserialize)]
 #[serde(rename = "Win32_PhysicalMemory")]
 #[serde(rename_all = "PascalCase")]
 struct RAM {
