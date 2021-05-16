@@ -29,7 +29,7 @@ struct GPU {
     caption: String,
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, Debug)]
 #[serde(rename = "Win32_PhysicalMemory")]
 #[serde(rename_all = "PascalCase")]
 struct RAM {
@@ -71,6 +71,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let baseboard = wmi_con.query::<Baseboard>()?;
     let gpu = wmi_con.query::<GPU>()?;
     let ram = wmi_con.query::<RAM>()?;
+    let total_ram = ram.into_iter().map(|v| v.capacity.parse::<u128>()).filter_map(Result::ok).sum::<u128>();
 
     let gpu_ram = RegKey::predef(HKEY_LOCAL_MACHINE)
         .open_subkey("SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000")?;
@@ -78,7 +79,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("CPU:        {}", cpu.first().unwrap_or(&Default::default()));
     println!("Baseboard:  {}", baseboard.first().unwrap_or(&Default::default()));
-    println!("RAM:        {}", ram.first().unwrap_or(&Default::default()));
+    println!("RAM:        {}", Byte::from(total_ram).get_appropriate_unit(true).format(1));
     println!("GPU:        {}", gpu.first().unwrap_or(&Default::default()));
     println!("GPU RAM:    {}", Byte::from(gpu_ram).get_appropriate_unit(true).format(1));
 
