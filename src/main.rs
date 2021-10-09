@@ -57,7 +57,11 @@ impl Display for GPU {
 impl Display for RAM {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self.capacity.parse::<u128>() {
-            Ok(capacity) => write!(f, "{}", Byte::from(capacity).get_appropriate_unit(true).format(1)),
+            Ok(capacity) => write!(
+                f,
+                "{}",
+                Byte::from(capacity).get_appropriate_unit(true).format(1)
+            ),
             _ => write!(f, ""),
         }
     }
@@ -69,19 +73,31 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let cpu = wmi_con.query::<CPU>()?;
     let baseboard = wmi_con.query::<Baseboard>()?;
-    let gpu = wmi_con.query::<GPU>()?;
     let ram = wmi_con.query::<RAM>()?;
-    let total_ram = ram.into_iter().map(|v| v.capacity.parse::<u128>()).filter_map(Result::ok).sum::<u128>();
-
-    let gpu_ram = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey("SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000")?;
-    let gpu_ram: u64 = gpu_ram.get_value("HardwareInformation.qwMemorySize")?;
+    let total_ram = ram
+        .into_iter()
+        .map(|v| v.capacity.parse::<u128>())
+        .filter_map(Result::ok)
+        .sum::<u128>();
 
     println!("CPU:        {}", cpu.first().unwrap_or(&Default::default()));
     println!("Baseboard:  {}", baseboard.first().unwrap_or(&Default::default()));
     println!("RAM:        {}", Byte::from(total_ram).get_appropriate_unit(true).format(1));
-    println!("GPU:        {}", gpu.first().unwrap_or(&Default::default()));
-    println!("GPU RAM:    {}", Byte::from(gpu_ram).get_appropriate_unit(true).format(1));
+
+    let gpus = "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}";
+    let gpus = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey(gpus)?;
+    for key in gpus
+        .enum_keys()
+        .filter_map(Result::ok)
+        .filter(|x| x.len() == 4 && x.chars().all(|x| x.is_digit(10)))
+    {
+        let gpu = gpus.open_subkey(key)?;
+        let name: String = gpu.get_value("DriverDesc")?;
+        let ram: u64 = gpu.get_value("HardwareInformation.qwMemorySize")?;
+        let ram = Byte::from(ram).get_appropriate_unit(true).format(1);
+        println!("GPU:        {}", name);
+        println!("GPU RAM:    {}", ram);
+    }
 
     Ok(())
 }
